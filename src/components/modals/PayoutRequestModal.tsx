@@ -7,6 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Toaster, toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api-client";
+import { Loader2 } from "lucide-react";
 interface PayoutRequestModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -17,19 +20,32 @@ export function PayoutRequestModal({ isOpen, onOpenChange, balance }: PayoutRequ
     amount: z.number().min(50, "Minimum payout is $50").max(balance, "Amount cannot exceed your balance"),
     payoutMethod: z.string().min(1, "Please select a payout method"),
   });
-  const form = useForm({
+  const form = useForm<z.infer<typeof payoutSchema>>({
     resolver: zodResolver(payoutSchema),
     defaultValues: {
-      amount: Math.min(balance, 50),
-      payoutMethod: "paypal",
+      amount: Math.max(50, balance),
+      payoutMethod: "creator@example.com",
     },
   });
+  const queryClient = useQueryClient();
+  const payoutMutation = useMutation({
+    mutationFn: (data: { amount: number }) => api('/api/payouts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    onSuccess: (_, variables) => {
+      toast.success("Payout request submitted!", {
+        description: `Your request for $${variables.amount.toFixed(2)} is being processed.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast.error(`Payout failed: ${error.message}`);
+    }
+  });
   const onSubmit = (data: z.infer<typeof payoutSchema>) => {
-    console.log("Payout request:", data);
-    onOpenChange(false);
-    toast.success("Payout request submitted!", {
-      description: `Your request for $${data.amount.toFixed(2)} is being processed.`,
-    });
+    payoutMutation.mutate({ amount: data.amount });
   };
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -63,7 +79,7 @@ export function PayoutRequestModal({ isOpen, onOpenChange, balance }: PayoutRequ
                   <FormLabel>Payout Method</FormLabel>
                   <FormControl>
                     {/* In a real app, this would be a select with user's saved methods */}
-                    <Input placeholder="PayPal Email / Bank Account" value="creator@example.com" readOnly />
+                    <Input placeholder="PayPal Email / Bank Account" {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -71,7 +87,10 @@ export function PayoutRequestModal({ isOpen, onOpenChange, balance }: PayoutRequ
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button type="submit" className="btn-gradient">Submit Request</Button>
+              <Button type="submit" className="btn-gradient" disabled={payoutMutation.isPending}>
+                {payoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Submit Request
+              </Button>
             </DialogFooter>
           </form>
         </Form>

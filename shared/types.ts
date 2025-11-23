@@ -59,6 +59,7 @@ export interface Subscription {
   active: boolean;
 }
 export interface UserTokens {
+  id: string; // user id
   userId: string;
   balance: number;
 }
@@ -69,4 +70,9 @@ export interface TokenTransaction {
   amount: number;
   reason: string;
   ts: Date;
+}
+export interface AnalyticsData {
+  earnings: { month: string; earnings: number }[];
+  subscribers: { month: string; subscribers: number }[];
+  topContent: (ContentItem & { views: number; earnings: number })[];
 }

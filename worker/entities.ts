@@ -40,7 +40,7 @@ export class TokenTransactionEntity extends IndexedEntity<TokenTransaction> {
 export class UserTokensEntity extends IndexedEntity<UserTokens> {
     static readonly entityName = 'user_tokens';
     static readonly indexName = 'user_tokens_idx'; // still needs an index name
-    static readonly initialState: UserTokens = { userId: '', balance: 0 };
+    static readonly initialState: UserTokens = { id: '', userId: '', balance: 0 };
     static readonly seedData = [MOCK_USER_TOKENS];
-    static keyOf(state: UserTokens): string { return state.userId; }
+    static keyOf(state: UserTokens): string { return state.id; }
 }

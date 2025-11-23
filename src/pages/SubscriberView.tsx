@@ -2,12 +2,12 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { ContentCard } from "@/components/content/ContentCard";
 import { SubscriptionTierCard } from "@/components/content/SubscriptionTierCard";
-import { Gem, Lock, AlertTriangle } from "lucide-react";
+import { Gem, Lock, AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { TokenPurchaseModal } from "@/components/modals/TokenPurchaseModal";
 import { Toaster, toast } from "sonner";
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import type { Creator, ContentItem, Tier, Subscription } from "@shared/types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,10 +20,25 @@ interface CreatorViewData {
 export function SubscriberView() {
   const { creatorId } = useParams<{ creatorId: string }>();
   const [isTokenModalOpen, setTokenModalOpen] = useState(false);
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery<CreatorViewData>({
     queryKey: ['creator', creatorId],
     queryFn: () => api(`/api/creator/${creatorId}`),
     enabled: !!creatorId,
+  });
+  const subscribeMutation = useMutation({
+    mutationFn: (tierId: string) => api('/api/subscriptions', {
+      method: 'POST',
+      body: JSON.stringify({ tierId }),
+    }),
+    onSuccess: (_, tierId) => {
+      const tierName = data?.tiers.find(t => t.id === tierId)?.name || 'new tier';
+      toast.success(`Successfully subscribed to ${tierName}!`);
+      queryClient.invalidateQueries({ queryKey: ['creator', creatorId] });
+    },
+    onError: (error) => {
+      toast.error(`Subscription failed: ${error.message}`);
+    }
   });
   if (isLoading) {
     return <SubscriberViewSkeleton />;
@@ -65,7 +80,7 @@ export function SubscriberView() {
             <h2 className="text-2xl font-semibold text-center">Join a Tier to Unlock Content</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tiers.map(tier => (
-                <SubscriptionTierCard key={tier.id} tier={tier} onSubscribe={() => toast.success(`Subscribed to ${tier.name}!`)} />
+                <SubscriptionTierCard key={tier.id} tier={tier} onSubscribe={(tierId) => subscribeMutation.mutate(tierId)} />
               ))}
             </div>
           </section>
@@ -84,7 +99,10 @@ export function SubscriberView() {
                       <Lock className="w-12 h-12" />
                       <h3 className="text-xl font-bold text-center">Unlock this post</h3>
                       <p className="text-center text-sm">Subscribe to the '{tiers.find(t => t.id === item.tierId)?.name}' tier or higher to view.</p>
-                      <Button className="btn-gradient">Subscribe to Unlock</Button>
+                      <Button className="btn-gradient" onClick={() => subscribeMutation.mutate(item.tierId)} disabled={subscribeMutation.isPending}>
+                        {subscribeMutation.isPending && subscribeMutation.variables === item.tierId && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Subscribe to Unlock
+                      </Button>
                     </div>
                   )}
                 </div>

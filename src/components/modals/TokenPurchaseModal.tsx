@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Gem, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Toaster, toast } from "sonner";
-import { addTokenTransaction } from "@shared/mock-data";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api-client";
 interface TokenPurchaseModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -18,21 +19,24 @@ const tokenPackages = [
 ];
 export function TokenPurchaseModal({ isOpen, onOpenChange, onPurchaseSuccess }: TokenPurchaseModalProps) {
   const [selectedPackage, setSelectedPackage] = useState(tokenPackages[1]);
-  const [isLoading, setIsLoading] = useState(false);
-  const handlePurchase = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      addTokenTransaction({
-        userId: 'u1',
-        amount: selectedPackage.amount,
-        reason: 'Token Purchase',
-        ts: new Date(),
-      });
-      onPurchaseSuccess?.(selectedPackage.amount);
-      setIsLoading(false);
+  const queryClient = useQueryClient();
+  const purchaseMutation = useMutation({
+    mutationFn: (amount: number) => api('/api/tokens/purchase', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    }),
+    onSuccess: (_, variables) => {
+      toast.success(`${variables.toLocaleString()} tokens purchased successfully!`);
+      queryClient.invalidateQueries({ queryKey: ['tokens'] });
+      onPurchaseSuccess?.(variables);
       onOpenChange(false);
-      toast.success(`${selectedPackage.amount} tokens purchased successfully!`);
-    }, 1500);
+    },
+    onError: (error) => {
+      toast.error(`Purchase failed: ${error.message}`);
+    }
+  });
+  const handlePurchase = () => {
+    purchaseMutation.mutate(selectedPackage.amount);
   };
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -60,8 +64,8 @@ export function TokenPurchaseModal({ isOpen, onOpenChange, onPurchaseSuccess }: 
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handlePurchase} disabled={isLoading} className="btn-gradient">
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          <Button onClick={handlePurchase} disabled={purchaseMutation.isPending} className="btn-gradient">
+            {purchaseMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Purchase for ${selectedPackage.price.toFixed(2)}
           </Button>
         </DialogFooter>
