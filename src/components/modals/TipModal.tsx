@@ -23,10 +23,12 @@ export function TipModal({ isOpen, onOpenChange, creatorId, creatorName }: TipMo
     queryFn: () => api('/api/tokens'),
     enabled: isOpen,
   });
+  const tipSchemaBase = (maxBalance: number) => z.object({
+    amount: z.coerce.number().positive("Amount must be positive").max(maxBalance, "Insufficient balance"),
+  });
+
   const form = useForm<TipFormData>({
-    resolver: zodResolver(z.object({
-      amount: z.coerce.number().positive("Amount must be positive").max(tokenData?.balance ?? 0, "Insufficient balance"),
-    })),
+    resolver: zodResolver(tipSchemaBase(tokenData?.balance ?? 0)),
     defaultValues: { amount: 100 },
   });
   const queryClient = useQueryClient();
