@@ -1,7 +1,13 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
-import type { Tier } from "@shared/types";
+export interface Tier {
+  id: string;
+  creatorId: string;
+  name: string;
+  price: number;
+  benefits: string[];
+}
 interface SubscriptionTierCardProps {
   tier: Tier;
   isCreatorView?: boolean;

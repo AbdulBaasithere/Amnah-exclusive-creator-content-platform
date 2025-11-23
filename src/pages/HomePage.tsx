@@ -1,148 +1,177 @@
-// Home page of the app, Currently a demo page for demonstration.
-// Please rewrite this file to implement your own logic. Do not replace or delete it, simply rewrite this HomePage.tsx file.
-import { useEffect } from 'react'
-import { Sparkles } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { Toaster, toast } from '@/components/ui/sonner'
-import { create } from 'zustand'
-import { useShallow } from 'zustand/react/shallow'
-import { AppLayout } from '@/components/layout/AppLayout'
-
-// Timer store: independent slice with a clear, minimal API, for demonstration
-type TimerState = {
-  isRunning: boolean;
-  elapsedMs: number;
-  start: () => void;
-  pause: () => void;
-  reset: () => void;
-  tick: (deltaMs: number) => void;
-}
-
-const useTimerStore = create<TimerState>((set) => ({
-  isRunning: false,
-  elapsedMs: 0,
-  start: () => set({ isRunning: true }),
-  pause: () => set({ isRunning: false }),
-  reset: () => set({ elapsedMs: 0, isRunning: false }),
-  tick: (deltaMs) => set((s) => ({ elapsedMs: s.elapsedMs + deltaMs })),
-}))
-
-// Counter store: separate slice to showcase multiple stores without coupling
-type CounterState = {
-  count: number;
-  inc: () => void;
-  reset: () => void;
-}
-
-const useCounterStore = create<CounterState>((set) => ({
-  count: 0,
-  inc: () => set((s) => ({ count: s.count + 1 })),
-  reset: () => set({ count: 0 }),
-}))
-
-function formatDuration(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000))
-  const m = Math.floor(total / 60)
-  const s = total % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
-
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { ArrowRight, Clapperboard, Code, Download, Edit, Gem, ShieldCheck, Users } from "lucide-react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+const featureCards = [
+  {
+    icon: <Edit className="w-8 h-8 text-primary" />,
+    title: "Creator-First Tools",
+    description: "Manage your content, subscribers, and earnings with a powerful, intuitive dashboard.",
+  },
+  {
+    icon: <Users className="w-8 h-8 text-primary" />,
+    title: "Subscription Tiers",
+    description: "Create custom recurring subscription tiers with unique benefits for your audience.",
+  },
+  {
+    icon: <Gem className="w-8 h-8 text-primary" />,
+    title: "Token-Based Tipping",
+    description: "Receive one-time tips and gifts from your supporters via our virtual token system.",
+  },
+  {
+    icon: <ShieldCheck className="w-8 h-8 text-primary" />,
+    title: "Secure Content Gating",
+    description: "Protect your exclusive content and ensure it's only accessible to paying subscribers.",
+  },
+  {
+    icon: <Clapperboard className="w-8 h-8 text-primary" />,
+    title: "Multi-Content Support",
+    description: "Upload videos, digital downloads, private posts, code snippets, and more.",
+  },
+  {
+    icon: <Download className="w-8 h-8 text-primary" />,
+    title: "Digital Goods",
+    description: "Sell digital products like e-books, software, and design assets directly to your audience.",
+  },
+];
+const pricingTiers = [
+  {
+    name: "Explorer",
+    price: "$9",
+    features: ["Basic Content Access", "Community Chat", "Email Updates"],
+    cta: "Choose Plan",
+  },
+  {
+    name: "Creator Pro",
+    price: "$29",
+    features: ["All Explorer Features", "Exclusive Videos", "Source Code Downloads", "Priority Support"],
+    cta: "Choose Plan",
+    popular: true,
+  },
+  {
+    name: "VIP Access",
+    price: "$99",
+    features: ["All Creator Pro Features", "1-on-1 Coaching Session", "Early Access to Content", "Direct Messaging"],
+    cta: "Choose Plan",
+  },
+];
 export function HomePage() {
-  // Select only what is needed to avoid unnecessary re-renders
-  const { isRunning, elapsedMs } = useTimerStore(
-    useShallow((s) => ({ isRunning: s.isRunning, elapsedMs: s.elapsedMs })),
-  )
-  const start = useTimerStore((s) => s.start)
-  const pause = useTimerStore((s) => s.pause)
-  const resetTimer = useTimerStore((s) => s.reset)
-  const count = useCounterStore((s) => s.count)
-  const inc = useCounterStore((s) => s.inc)
-  const resetCount = useCounterStore((s) => s.reset)
-
-  // Drive the timer only while running; avoid update-depth issues with a scoped RAF
-  useEffect(() => {
-    if (!isRunning) return
-    let raf = 0
-    let last = performance.now()
-    const loop = () => {
-      const now = performance.now()
-      const delta = now - last
-      last = now
-      // Read store API directly to keep effect deps minimal and stable
-      useTimerStore.getState().tick(delta)
-      raf = requestAnimationFrame(loop)
-    }
-    raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
-  }, [isRunning])
-
-  const onPleaseWait = () => {
-    inc()
-    if (!isRunning) {
-      start()
-      toast.success('Building your app…', {
-        description: 'Hang tight, we\'re setting everything up.',
-      })
-    } else {
-      pause()
-      toast.info('Taking a short pause', {
-        description: 'We\'ll continue shortly.',
-      })
-    }
-  }
-
-  const formatted = formatDuration(elapsedMs)
-
   return (
-    <AppLayout>
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden relative">
-        <ThemeToggle />
-        <div className="absolute inset-0 bg-gradient-rainbow opacity-10 dark:opacity-20 pointer-events-none" />
-        <div className="text-center space-y-8 relative z-10 animate-fade-in">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-primary floating">
-              <Sparkles className="w-8 h-8 text-white rotating" />
+    <div className="bg-background text-foreground min-h-screen">
+      <ThemeToggle className="fixed top-4 right-4" />
+      <main>
+        {/* Hero Section */}
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-100/50 via-indigo-100/50 to-teal-100/50 dark:from-orange-900/20 dark:via-indigo-900/20 dark:to-teal-900/20" />
+          <div className="absolute inset-0 bg-grid-black/[0.05] dark:bg-grid-white/[0.05]" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div className="py-24 md:py-32 lg:py-40 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <h1 className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight">
+                  Monetize Your Skills,
+                  <br />
+                  <span className="text-gradient bg-gradient-primary">Empower Your Audience</span>
+                </h1>
+                <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
+                  CraftLedger is the exclusive platform for creators to share premium content, build a loyal community, and earn a sustainable income.
+                </p>
+                <div className="mt-10 flex justify-center gap-4">
+                  <Button asChild size="lg" className="btn-gradient px-8 py-4 text-lg font-semibold hover:-translate-y-0.5 transition-all duration-200">
+                    <Link to="/creator/c1">Start a Creator Profile</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="px-8 py-4 text-lg font-semibold hover:-translate-y-0.5 transition-all duration-200">
+                    <Link to="/creator/c1">Explore Creators <ArrowRight className="ml-2 w-5 h-5" /></Link>
+                  </Button>
+                </div>
+              </motion.div>
             </div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight">
-            Creating your <span className="text-gradient">app</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto text-pretty">
-            Your application would be ready soon.
-          </p>
-          <div className="flex justify-center gap-4">
-            <Button 
-              size="lg"
-              onClick={onPleaseWait}
-              className="btn-gradient px-8 py-4 text-lg font-semibold hover:-translate-y-0.5 transition-all duration-200"
-              aria-live="polite"
-            >
-              Please Wait
-            </Button>
-          </div>
-          <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-            <div>
-              Time elapsed: <span className="font-medium tabular-nums text-foreground">{formatted}</span>
+        </section>
+        {/* Features Section */}
+        <section className="py-16 md:py-24 bg-secondary/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl md:text-4xl font-semibold">Everything You Need to Succeed</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                A complete toolkit for professional creators to build a thriving digital business.
+              </p>
             </div>
-            <div>
-              Coins: <span className="font-medium tabular-nums text-foreground">{count}</span>
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featureCards.map((feature, i) => (
+                <motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                >
+                  <Card className="h-full text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <CardHeader>
+                      <div className="mx-auto bg-primary/5 rounded-full p-3 w-fit">
+                        {feature.icon}
+                      </div>
+                      <CardTitle className="mt-4">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">{feature.description}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
             </div>
           </div>
-          <div className="flex justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => { resetTimer(); resetCount(); toast('Reset complete') }}>
-              Reset
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => { inc(); toast('Coin added') }}>
-              Add Coin
-            </Button>
+        </section>
+        {/* Pricing Preview Section */}
+        <section className="py-16 md:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl md:text-4xl font-semibold">Flexible Tiers for Every Creator</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                An example of how you can structure your subscription offerings.
+              </p>
+            </div>
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+              {pricingTiers.map((tier) => (
+                <Card key={tier.name} className={`flex flex-col ${tier.popular ? 'border-primary shadow-primary' : ''}`}>
+                  {tier.popular && (
+                    <div className="bg-primary text-primary-foreground text-center text-sm font-bold py-1 rounded-t-lg">
+                      Most Popular
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle>{tier.name}</CardTitle>
+                    <p className="text-4xl font-bold">{tier.price}<span className="text-sm font-normal text-muted-foreground">/month</span></p>
+                  </CardHeader>
+                  <CardContent className="flex-grow flex flex-col">
+                    <ul className="space-y-3 text-muted-foreground flex-grow">
+                      {tier.features.map((feature) => (
+                        <li key={feature} className="flex items-center">
+                          <Code className="w-4 h-4 mr-2 text-primary" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button className={`mt-6 w-full ${tier.popular ? 'btn-gradient' : ''}`} variant={tier.popular ? 'default' : 'outline'}>
+                      {tier.cta}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
+        </section>
+      </main>
+      <footer className="py-8 border-t">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} CraftLedger. Built with ❤️ at Cloudflare.</p>
         </div>
-        <footer className="absolute bottom-8 text-center text-muted-foreground/80">
-          <p>Powered by Cloudflare</p>
-        </footer>
-        <Toaster richColors closeButton />
-      </div>
-    </AppLayout>
-  )
+      </footer>
+    </div>
+  );
 }
