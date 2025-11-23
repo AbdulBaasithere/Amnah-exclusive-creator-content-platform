@@ -7,13 +7,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { MOCK_TIERS, addContentItem } from "@shared/mock-data";
+import { MOCK_TIERS } from "@shared/mock-data";
 import { Toaster, toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, UploadCloud } from "lucide-react";
+import { CalendarIcon, UploadCloud, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api-client";
+import type { ContentItem } from "@shared/types";
 const contentSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().optional(),
@@ -26,6 +29,7 @@ interface CreatorEditorProps {
   onSave?: () => void;
 }
 export function CreatorEditor({ onSave }: CreatorEditorProps) {
+  const queryClient = useQueryClient();
   const form = useForm<ContentFormData>({
     resolver: zodResolver(contentSchema),
     defaultValues: {
@@ -35,20 +39,29 @@ export function CreatorEditor({ onSave }: CreatorEditorProps) {
       tierId: "",
     },
   });
+  const createContentMutation = useMutation({
+    mutationFn: (newContent: Omit<ContentItem, 'id' | 'creatorId' | 'status' | 'attachments'>) => 
+      api<ContentItem>('/api/content', {
+        method: 'POST',
+        body: JSON.stringify(newContent),
+      }),
+    onSuccess: () => {
+      toast.success("Content saved successfully!");
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      form.reset();
+      if (onSave) onSave();
+    },
+    onError: (error) => {
+      toast.error(`Failed to save content: ${error.message}`);
+    }
+  });
   const onSubmit = (data: ContentFormData) => {
-    console.log("Submitting:", data);
-    const status = data.publishDate && data.publishDate > new Date() ? 'scheduled' : 'published';
-    addContentItem({
-      title: data.title,
-      description: data.description,
-      type: data.type,
-      tierId: data.tierId,
-      publishedAt: data.publishDate || new Date(),
-      status: status,
-    });
-    toast.success("Content saved successfully!");
-    form.reset();
-    if (onSave) onSave();
+    const submissionData = {
+      ...data,
+      description: data.description || '',
+      publishDate: data.publishDate ? data.publishDate.toISOString() : undefined,
+    };
+    createContentMutation.mutate(submissionData as any);
   };
   return (
     <div className="p-1">
@@ -182,8 +195,11 @@ export function CreatorEditor({ onSave }: CreatorEditorProps) {
             )}
           />
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline">Save as Draft</Button>
-            <Button type="submit" className="btn-gradient">Publish Now</Button>
+            <Button type="button" variant="outline" disabled={createContentMutation.isPending}>Save as Draft</Button>
+            <Button type="submit" className="btn-gradient" disabled={createContentMutation.isPending}>
+              {createContentMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Publish Now
+            </Button>
           </div>
         </form>
       </Form>

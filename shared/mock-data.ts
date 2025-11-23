@@ -16,11 +16,11 @@ export const MOCK_CREATOR: Creator = {
   balance: 7450.50,
 };
 export let MOCK_CONTENT_ITEMS: ContentItem[] = [
-  { id: 'content1', creatorId: 'c1', title: 'Building a SaaS with Cloudflare Workers', type: 'video', tierId: 't2', publishedAt: new Date('2023-10-26'), status: 'published', attachments: [] },
-  { id: 'content2', creatorId: 'c1', title: 'Project Source Code: SaaS Boilerplate', type: 'download', tierId: 't2', publishedAt: new Date('2023-10-26'), status: 'published', attachments: [{ url: '#', name: 'source-code.zip' }] },
-  { id: 'content3', creatorId: 'c1', title: 'Weekly Q&A Session', type: 'post', tierId: 't1', publishedAt: new Date('2023-10-20'), status: 'published', attachments: [] },
-  { id: 'content4', creatorId: 'c1', title: 'Advanced Durable Objects Patterns', type: 'video', tierId: 't3', publishedAt: new Date('2023-11-05'), status: 'scheduled', attachments: [] },
-  { id: 'content5', creatorId: 'c1', title: 'New Course Announcement (Draft)', type: 'post', tierId: 't1', publishedAt: new Date(), status: 'draft', attachments: [] },
+  { id: 'content1', creatorId: 'c1', title: 'Building a SaaS with Cloudflare Workers', description: 'A deep dive into serverless architecture.', type: 'video', tierId: 't2', publishedAt: new Date('2023-10-26'), status: 'published', attachments: [] },
+  { id: 'content2', creatorId: 'c1', title: 'Project Source Code: SaaS Boilerplate', description: 'Get the full source code for the project.', type: 'download', tierId: 't2', publishedAt: new Date('2023-10-26'), status: 'published', attachments: [{ url: '#', name: 'source-code.zip' }] },
+  { id: 'content3', creatorId: 'c1', title: 'Weekly Q&A Session', description: 'Answering your questions live.', type: 'post', tierId: 't1', publishedAt: new Date('2023-10-20'), status: 'published', attachments: [] },
+  { id: 'content4', creatorId: 'c1', title: 'Advanced Durable Objects Patterns', description: 'Exploring complex state management.', type: 'video', tierId: 't3', publishedAt: new Date('2023-11-05'), status: 'scheduled', attachments: [] },
+  { id: 'content5', creatorId: 'c1', title: 'New Course Announcement (Draft)', description: 'Something new is coming!', type: 'post', tierId: 't1', publishedAt: new Date(), status: 'draft', attachments: [] },
 ];
 export const MOCK_TIERS: Tier[] = [
   { id: 't1', creatorId: 'c1', name: 'Explorer', price: 9, benefits: ['Access to basic posts', 'Community chat access', 'Monthly newsletter'] },
@@ -33,6 +33,7 @@ export const MOCK_USER: UserProfile = {
   avatar: 'https://i.pravatar.cc/150?u=janesub',
 };
 export const MOCK_SUBSCRIPTION: Subscription = {
+  id: 'sub1',
   userId: 'u1',
   creatorId: 'c1',
   tierId: 't2',
@@ -75,22 +76,3 @@ export const MOCK_ANALYTICS_DATA = {
     earnings: (1500 - i * 300) * 0.5,
   })),
 };
-// --- MOCK API FUNCTIONS ---
-export const addContentItem = (item: Omit<ContentItem, 'id' | 'creatorId' | 'attachments'> & { attachments?: any[] }) => {
-  const newItem: ContentItem = {
-    ...item,
-    id: `c${Date.now()}`,
-    creatorId: MOCK_CREATOR.id,
-    attachments: item.attachments || [],
-  };
-  MOCK_CONTENT_ITEMS.unshift(newItem);
-  return Promise.resolve(newItem);
-};
-export const addTokenTransaction = (tx: Omit<TokenTransaction, 'id'>) => {
-    const newTx: TokenTransaction = { ...tx, id: `tx${Date.now()}` };
-    MOCK_TOKEN_TRANSACTIONS.unshift(newTx);
-    if (tx.amount > 0) {
-      MOCK_USER_TOKENS.balance += tx.amount;
-    }
-    return Promise.resolve(newTx);
-}

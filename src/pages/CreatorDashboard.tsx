@@ -1,19 +1,48 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, PlusCircle, Users, FileText, ArrowRight } from "lucide-react";
+import { DollarSign, PlusCircle, Users, FileText, ArrowRight, AlertTriangle } from "lucide-react";
 import { ContentCard } from "@/components/content/ContentCard";
 import { SubscriptionTierCard } from "@/components/content/SubscriptionTierCard";
 import { PayoutRequestModal } from "@/components/modals/PayoutRequestModal";
-import { MOCK_CREATOR, MOCK_CONTENT_ITEMS, MOCK_TIERS, MOCK_TOP_TIPPERS, MOCK_ANALYTICS_DATA } from "@shared/mock-data";
+import { MOCK_ANALYTICS_DATA } from "@shared/mock-data";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CreatorEditor } from "./CreatorEditor";
 import { Link } from "react-router-dom";
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api-client";
+import type { Creator, ContentItem, Tier } from "@shared/types";
+import { Skeleton } from "@/components/ui/skeleton";
+interface DashboardData {
+  creator: Creator;
+  content: ContentItem[];
+  tiers: Tier[];
+  topTippers: { user: { id: string; name: string; avatar: string; }; amount: number; }[];
+}
 export function CreatorDashboard() {
   const [isPayoutModalOpen, setPayoutModalOpen] = useState(false);
   const [isEditorSheetOpen, setEditorSheetOpen] = useState(false);
+  const { data, isLoading, error } = useQuery<DashboardData>({
+    queryKey: ['dashboard'],
+    queryFn: () => api('/api/dashboard'),
+  });
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+  if (error) {
+    return (
+      <AppLayout container>
+        <div className="flex flex-col items-center justify-center h-96 bg-red-50 dark:bg-red-900/20 rounded-lg">
+          <AlertTriangle className="w-12 h-12 text-red-500" />
+          <h2 className="mt-4 text-xl font-semibold">Failed to load dashboard</h2>
+          <p className="text-muted-foreground">{error.message}</p>
+        </div>
+      </AppLayout>
+    );
+  }
+  const { creator, content, tiers, topTippers } = data!;
   return (
     <AppLayout container>
       <div className="space-y-8 md:space-y-12">
@@ -21,7 +50,7 @@ export function CreatorDashboard() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold font-display">Creator Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {MOCK_CREATOR.name}!</p>
+            <p className="text-muted-foreground">Welcome back, {creator.name}!</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setPayoutModalOpen(true)}>Request Payout</Button>
@@ -49,7 +78,7 @@ export function CreatorDashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${MOCK_CREATOR.balance.toFixed(2)}</div>
+              <div className="text-2xl font-bold">${creator.balance.toFixed(2)}</div>
               <p className="text-xs text-muted-foreground">+20.1% from last month</p>
             </CardContent>
           </Card>
@@ -69,7 +98,7 @@ export function CreatorDashboard() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{MOCK_CONTENT_ITEMS.length}</div>
+              <div className="text-2xl font-bold">{content.length}</div>
               <p className="text-xs text-muted-foreground">+5 since last month</p>
             </CardContent>
           </Card>
@@ -111,7 +140,7 @@ export function CreatorDashboard() {
           <div className="lg:col-span-2 space-y-6">
             <h2 className="text-2xl font-semibold">Content Library</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {MOCK_CONTENT_ITEMS.map(item => (
+              {content.map(item => (
                 <ContentCard key={item.id} content={item} isCreatorView />
               ))}
             </div>
@@ -121,7 +150,7 @@ export function CreatorDashboard() {
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold">Subscription Tiers</h2>
               <div className="space-y-4">
-                {MOCK_TIERS.map(tier => (
+                {tiers.map(tier => (
                   <SubscriptionTierCard key={tier.id} tier={tier} isCreatorView />
                 ))}
               </div>
@@ -131,7 +160,7 @@ export function CreatorDashboard() {
               <Card>
                 <CardContent className="p-4">
                   <ul className="space-y-4">
-                    {MOCK_TOP_TIPPERS.map(tipper => (
+                    {topTippers.map(tipper => (
                       <li key={tipper.user.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <img src={tipper.user.avatar} alt={tipper.user.name} className="w-10 h-10 rounded-full" />
@@ -149,7 +178,43 @@ export function CreatorDashboard() {
           </div>
         </div>
       </div>
-      <PayoutRequestModal isOpen={isPayoutModalOpen} onOpenChange={setPayoutModalOpen} balance={MOCK_CREATOR.balance} />
+      <PayoutRequestModal isOpen={isPayoutModalOpen} onOpenChange={setPayoutModalOpen} balance={creator.balance} />
+    </AppLayout>
+  );
+}
+function DashboardSkeleton() {
+  return (
+    <AppLayout container>
+      <div className="space-y-8 md:space-y-12">
+        <div className="flex justify-between items-center">
+          <div>
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-4 w-48 mt-2" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card><CardHeader><Skeleton className="h-4 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-32" /><Skeleton className="h-3 w-24 mt-1" /></CardContent></Card>
+          <Card><CardHeader><Skeleton className="h-4 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-32" /><Skeleton className="h-3 w-24 mt-1" /></CardContent></Card>
+          <Card><CardHeader><Skeleton className="h-4 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-32" /><Skeleton className="h-3 w-24 mt-1" /></CardContent></Card>
+          <Card><CardHeader><Skeleton className="h-4 w-24" /></CardHeader><CardContent><Skeleton className="h-16 w-full" /></CardContent></Card>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-8 w-48" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton className="h-64 w-full rounded-lg" />
+              <Skeleton className="h-64 w-full rounded-lg" />
+            </div>
+          </div>
+          <div className="space-y-8">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-48 w-full rounded-lg" />
+            <Skeleton className="h-8 w-32 mt-4" />
+            <Skeleton className="h-48 w-full rounded-lg" />
+          </div>
+        </div>
+      </div>
     </AppLayout>
   );
 }

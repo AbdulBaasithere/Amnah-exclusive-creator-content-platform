@@ -32,6 +32,7 @@ export interface ContentItem {
   id: string;
   creatorId: string;
   title: string;
+  description: string;
   type: 'video' | 'download' | 'post';
   tierId: string;
   publishedAt: Date;
@@ -51,6 +52,7 @@ export interface UserProfile {
   avatar: string;
 }
 export interface Subscription {
+  id: string;
   userId: string;
   creatorId: string;
   tierId: string;
