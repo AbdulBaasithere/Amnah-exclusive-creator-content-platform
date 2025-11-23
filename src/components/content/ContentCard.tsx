@@ -1,11 +1,16 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit, Trash2, Clock, Eye } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { MoreVertical, Edit, Trash2, Clock, Eye, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import type { ContentItem } from "@shared/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api-client";
+import { toast } from "sonner";
+import { useState } from "react";
 interface ContentCardProps {
   content: ContentItem;
   isCreatorView?: boolean;
@@ -16,6 +21,21 @@ const statusColors = {
   scheduled: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
 };
 export function ContentCard({ content, isCreatorView = false }: ContentCardProps) {
+  const [isAlertOpen, setAlertOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: () => api(`/api/content/${content.id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success("Content deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete content: ${error.message}`);
+    },
+    onSettled: () => {
+      setAlertOpen(false);
+    }
+  });
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-shadow duration-200">
       <CardHeader>
@@ -32,8 +52,30 @@ export function ContentCard({ content, isCreatorView = false }: ContentCardProps
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild><Link to={`/editor/${content.id}`} className="w-full flex"><Edit className="mr-2 h-4 w-4" /> Edit</Link></DropdownMenuItem>
-                <DropdownMenuItem><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to={`/editor/${content.id}`} className="w-full flex cursor-pointer"><Edit className="mr-2 h-4 w-4" /> Edit</Link></DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <AlertDialog open={isAlertOpen} onOpenChange={setAlertOpen}>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive cursor-pointer">
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the content item "{content.title}".
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="bg-destructive hover:bg-destructive/90">
+                        {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -48,7 +90,7 @@ export function ContentCard({ content, isCreatorView = false }: ContentCardProps
       <CardFooter className="text-sm text-muted-foreground flex justify-between items-center">
         <div className="flex items-center gap-1">
           {content.status === 'scheduled' ? <Clock className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          <span>{format(content.publishedAt, "MMM d, yyyy")}</span>
+          <span>{format(new Date(content.publishedAt), "MMM d, yyyy")}</span>
         </div>
         {isCreatorView && <Badge className={`${statusColors[content.status]} capitalize`}>{content.status}</Badge>}
       </CardFooter>

@@ -4,7 +4,7 @@ import { ContentCard } from "@/components/content/ContentCard";
 import { SubscriptionTierCard } from "@/components/content/SubscriptionTierCard";
 import { Gem, Lock, AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { TokenPurchaseModal } from "@/components/modals/TokenPurchaseModal";
+import { TipModal } from "@/components/modals/TipModal";
 import { Toaster, toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -19,7 +19,7 @@ interface CreatorViewData {
 }
 export function SubscriberView() {
   const { creatorId } = useParams<{ creatorId: string }>();
-  const [isTokenModalOpen, setTokenModalOpen] = useState(false);
+  const [isTipModalOpen, setTipModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery<CreatorViewData>({
     queryKey: ['creator', creatorId],
@@ -43,18 +43,18 @@ export function SubscriberView() {
   if (isLoading) {
     return <SubscriberViewSkeleton />;
   }
-  if (error) {
+  if (error || !data) {
     return (
       <AppLayout container>
         <div className="flex flex-col items-center justify-center h-96 bg-red-50 dark:bg-red-900/20 rounded-lg">
           <AlertTriangle className="w-12 h-12 text-red-500" />
           <h2 className="mt-4 text-xl font-semibold">Failed to load creator page</h2>
-          <p className="text-muted-foreground">{error.message}</p>
+          <p className="text-muted-foreground">{error?.message || "Creator not found."}</p>
         </div>
       </AppLayout>
     );
   }
-  const { creator, content, tiers, subscription } = data!;
+  const { creator, content, tiers, subscription } = data;
   const hasSubscription = subscription.active;
   const subscribedTierIndex = tiers.findIndex(t => t.id === subscription.tierId);
   const canViewContent = (contentTierId: string) => {
@@ -70,7 +70,7 @@ export function SubscriberView() {
           <img src={creator.avatar} alt={creator.name} className="w-24 h-24 rounded-full mx-auto ring-4 ring-primary/20" />
           <h1 className="text-4xl font-bold font-display">{creator.name}</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">{creator.bio}</p>
-          <Button onClick={() => setTokenModalOpen(true)}>
+          <Button onClick={() => setTipModalOpen(true)}>
             <Gem className="mr-2 h-4 w-4" /> Tip Tokens
           </Button>
         </header>
@@ -99,7 +99,7 @@ export function SubscriberView() {
                       <Lock className="w-12 h-12" />
                       <h3 className="text-xl font-bold text-center">Unlock this post</h3>
                       <p className="text-center text-sm">Subscribe to the '{tiers.find(t => t.id === item.tierId)?.name}' tier or higher to view.</p>
-                      <Button className="btn-gradient" onClick={() => subscribeMutation.mutate(item.tierId)} disabled={subscribeMutation.isPending}>
+                      <Button className="btn-gradient" onClick={() => subscribeMutation.mutate(item.tierId)} disabled={subscribeMutation.isPending && subscribeMutation.variables === item.tierId}>
                         {subscribeMutation.isPending && subscribeMutation.variables === item.tierId && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Subscribe to Unlock
                       </Button>
@@ -111,7 +111,7 @@ export function SubscriberView() {
           </div>
         </section>
       </div>
-      <TokenPurchaseModal isOpen={isTokenModalOpen} onOpenChange={setTokenModalOpen} />
+      <TipModal isOpen={isTipModalOpen} onOpenChange={setTipModalOpen} creatorId={creator.id} creatorName={creator.name} />
       <Toaster richColors />
     </AppLayout>
   );

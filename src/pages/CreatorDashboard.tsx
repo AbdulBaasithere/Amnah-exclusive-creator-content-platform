@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, PlusCircle, Users, FileText, ArrowRight, AlertTriangle } from "lucide-react";
+import { DollarSign, PlusCircle, Users, FileText, ArrowRight, AlertTriangle, PenSquare } from "lucide-react";
 import { ContentCard } from "@/components/content/ContentCard";
 import { SubscriptionTierCard } from "@/components/content/SubscriptionTierCard";
 import { PayoutRequestModal } from "@/components/modals/PayoutRequestModal";
@@ -124,7 +124,7 @@ export function CreatorDashboard() {
                       padding: "4px 8px",
                     }}
                     labelFormatter={() => ''}
-                    formatter={(value: number) => [`$${value}`, 'Earnings']}
+                    formatter={(value: number) => [`${value}`, 'Earnings']}
                   />
                   <Area type="monotone" dataKey="earnings" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#colorEarningsPreview)" />
                 </AreaChart>
@@ -139,11 +139,23 @@ export function CreatorDashboard() {
           {/* Content Library */}
           <div className="lg:col-span-2 space-y-6">
             <h2 className="text-2xl font-semibold">Content Library</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {content.map(item => (
-                <ContentCard key={item.id} content={item} isCreatorView />
-              ))}
-            </div>
+            {content.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {content.map(item => (
+                  <ContentCard key={item.id} content={item} isCreatorView />
+                ))}
+              </div>
+            ) : (
+              <Card className="flex flex-col items-center justify-center text-center p-12 border-dashed">
+                <PenSquare className="w-16 h-16 text-muted-foreground" />
+                <h3 className="mt-4 text-xl font-semibold">No content yet</h3>
+                <p className="mt-2 text-muted-foreground">Start by creating your first piece of exclusive content.</p>
+                <Button className="mt-6 btn-gradient" onClick={() => setEditorSheetOpen(true)}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Create Content
+                </Button>
+              </Card>
+            )}
           </div>
           {/* Tiers & Tippers */}
           <div className="space-y-8">

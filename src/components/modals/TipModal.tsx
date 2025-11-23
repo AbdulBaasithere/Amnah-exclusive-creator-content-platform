@@ -15,20 +15,17 @@ interface TipModalProps {
   creatorId: string;
   creatorName: string;
 }
-
-type TipFormData = { amount: number };
 export function TipModal({ isOpen, onOpenChange, creatorId, creatorName }: TipModalProps) {
   const { data: tokenData } = useQuery<{ balance: number }>({
     queryKey: ['tokens'],
     queryFn: () => api('/api/tokens'),
     enabled: isOpen,
   });
-  const tipSchemaBase = (maxBalance: number) => z.object({
-    amount: z.coerce.number().positive("Amount must be positive").max(maxBalance, "Insufficient balance"),
+  const tipSchema = z.object({
+    amount: z.coerce.number().positive("Amount must be positive").max(tokenData?.balance ?? 0, "Insufficient balance"),
   });
-
-  const form = useForm<TipFormData>({
-    resolver: zodResolver(tipSchemaBase(tokenData?.balance ?? 0)),
+  const form = useForm<z.infer<typeof tipSchema>>({
+    resolver: zodResolver(tipSchema),
     defaultValues: { amount: 100 },
   });
   const queryClient = useQueryClient();
@@ -46,7 +43,7 @@ export function TipModal({ isOpen, onOpenChange, creatorId, creatorName }: TipMo
       toast.error(`Tipping failed: ${error.message}`);
     }
   });
-  const onSubmit = (data: TipFormData) => {
+  const onSubmit = (data: z.infer<typeof tipSchema>) => {
     tipMutation.mutate({ amount: data.amount, creatorId });
   };
   return (

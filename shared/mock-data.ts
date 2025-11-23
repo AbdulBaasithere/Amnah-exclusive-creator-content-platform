@@ -40,6 +40,7 @@ export const MOCK_SUBSCRIPTION: Subscription = {
   active: true,
 };
 export let MOCK_USER_TOKENS: UserTokens = {
+  id: 'u1', // This is the user ID, also used as the entity ID
   userId: 'u1',
   balance: 1250,
 };

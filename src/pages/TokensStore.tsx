@@ -2,15 +2,14 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MOCK_CREATOR } from "@shared/mock-data";
-import { Gem, PlusCircle, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { Gem, PlusCircle, AlertTriangle, Coins } from "lucide-react";
+import { useState, useMemo } from "react";
 import { TokenPurchaseModal } from "@/components/modals/TokenPurchaseModal";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
-import type { TokenTransaction } from "@shared/types";
+import type { TokenTransaction, Creator } from "@shared/types";
 import { Skeleton } from "@/components/ui/skeleton";
 interface TokensData {
   balance: number;
@@ -23,6 +22,14 @@ export function TokensStore() {
     queryKey: ['tokens'],
     queryFn: () => api('/api/tokens'),
   });
+  const { data: creators } = useQuery<Creator[]>({
+    queryKey: ['creators'],
+    queryFn: () => api('/api/creators'),
+  });
+  const creatorMap = useMemo(() => {
+    if (!creators) return new Map<string, string>();
+    return new Map(creators.map(c => [c.id, c.name]));
+  }, [creators]);
   const handlePurchaseSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['tokens'] });
   };
@@ -70,31 +77,39 @@ export function TokensStore() {
             <CardTitle>Transaction History</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((tx) => (
-                  <TableRow key={tx.id}>
-                    <TableCell>{format(new Date(tx.ts), "MMM d, yyyy")}</TableCell>
-                    <TableCell>
-                      <div className="font-medium">{tx.reason}</div>
-                      {tx.creatorId && <div className="text-sm text-muted-foreground">To: {MOCK_CREATOR.name}</div>}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={tx.amount > 0 ? "default" : "destructive"} className={tx.amount > 0 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}>
-                        {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
-                      </Badge>
-                    </TableCell>
+            {transactions.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map((tx) => (
+                    <TableRow key={tx.id}>
+                      <TableCell>{format(new Date(tx.ts), "MMM d, yyyy")}</TableCell>
+                      <TableCell>
+                        <div className="font-medium">{tx.reason}</div>
+                        {tx.creatorId && <div className="text-sm text-muted-foreground">To: {creatorMap.get(tx.creatorId) || 'A Creator'}</div>}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant={tx.amount > 0 ? "default" : "destructive"} className={tx.amount > 0 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}>
+                          {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Coins className="w-12 h-12 mx-auto" />
+                <h3 className="mt-4 text-lg font-semibold">No transactions yet</h3>
+                <p>Your token purchases and tips will appear here.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

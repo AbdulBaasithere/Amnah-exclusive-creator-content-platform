@@ -14,9 +14,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, UploadCloud, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import type { ContentItem } from "@shared/types";
+import { useParams } from "react-router-dom";
+import { useEffect } from "react";
 const contentSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().optional(),
@@ -29,7 +31,14 @@ interface CreatorEditorProps {
   onSave?: () => void;
 }
 export function CreatorEditor({ onSave }: CreatorEditorProps) {
+  const { contentId } = useParams<{ contentId?: string }>();
+  const isEditMode = !!contentId;
   const queryClient = useQueryClient();
+  const { data: existingContent, isLoading: isLoadingContent } = useQuery<ContentItem>({
+    queryKey: ['content', contentId],
+    queryFn: () => api(`/api/content/${contentId}`),
+    enabled: isEditMode,
+  });
   const form = useForm<ContentFormData>({
     resolver: zodResolver(contentSchema),
     defaultValues: {
@@ -39,16 +48,31 @@ export function CreatorEditor({ onSave }: CreatorEditorProps) {
       tierId: "",
     },
   });
-  const createContentMutation = useMutation({
-    mutationFn: (newContent: Omit<ContentItem, 'id' | 'creatorId' | 'status' | 'attachments'>) => 
-      api<ContentItem>('/api/content', {
-        method: 'POST',
+  useEffect(() => {
+    if (existingContent) {
+      form.reset({
+        title: existingContent.title,
+        description: existingContent.description,
+        type: existingContent.type,
+        tierId: existingContent.tierId,
+        publishDate: existingContent.publishedAt ? new Date(existingContent.publishedAt) : undefined,
+      });
+    }
+  }, [existingContent, form]);
+  const saveContentMutation = useMutation({
+    mutationFn: (newContent: Omit<ContentItem, 'id' | 'creatorId' | 'status' | 'attachments'>) => {
+      const endpoint = isEditMode ? `/api/content/${contentId}` : '/api/content';
+      const method = isEditMode ? 'PUT' : 'POST';
+      return api<ContentItem>(endpoint, {
+        method,
         body: JSON.stringify(newContent),
-      }),
+      });
+    },
     onSuccess: () => {
-      toast.success("Content saved successfully!");
+      toast.success(`Content ${isEditMode ? 'updated' : 'saved'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      form.reset();
+      queryClient.invalidateQueries({ queryKey: ['content', contentId] });
+      if (!isEditMode) form.reset();
       if (onSave) onSave();
     },
     onError: (error) => {
@@ -61,8 +85,11 @@ export function CreatorEditor({ onSave }: CreatorEditorProps) {
       description: data.description || '',
       publishDate: data.publishDate ? data.publishDate.toISOString() : undefined,
     };
-    createContentMutation.mutate(submissionData as any);
+    saveContentMutation.mutate(submissionData as any);
   };
+  if (isLoadingContent) {
+    return <div>Loading editor...</div>;
+  }
   return (
     <div className="p-1">
       <Form {...form}>
@@ -100,7 +127,7 @@ export function CreatorEditor({ onSave }: CreatorEditorProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Content Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select content type" />
@@ -122,7 +149,7 @@ export function CreatorEditor({ onSave }: CreatorEditorProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Required Tier</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a tier to gate content" />
@@ -195,10 +222,10 @@ export function CreatorEditor({ onSave }: CreatorEditorProps) {
             )}
           />
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" disabled={createContentMutation.isPending}>Save as Draft</Button>
-            <Button type="submit" className="btn-gradient" disabled={createContentMutation.isPending}>
-              {createContentMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Publish Now
+            <Button type="button" variant="outline" disabled={saveContentMutation.isPending}>Save as Draft</Button>
+            <Button type="submit" className="btn-gradient" disabled={saveContentMutation.isPending}>
+              {saveContentMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isEditMode ? 'Update Content' : 'Publish Now'}
             </Button>
           </div>
         </form>
