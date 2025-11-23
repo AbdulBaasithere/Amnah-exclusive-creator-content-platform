@@ -1,7 +1,7 @@
 CraftLedger — Exclusive Creator Content Platform
 ===============================================
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/AbdulBaasithere/Amnah-exclusive-creator-content-platform)
 
 CraftLedger is a premium, non-adult, creator-first platform that enables experts to publish gated educational content, sell digital goods, and receive recurring subscription revenue plus one-time token-based tips. This repository contains a production-grade, visually polished frontend built on a Cloudflare Workers template with a mocked Phase‑1 backend and a Durable Object-friendly pattern for later phases.
 
@@ -92,7 +92,7 @@ Working with the mock API (Phase 1)
 Cloudflare deployment
 ---------------------
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/AbdulBaasithere/Amnah-exclusive-creator-content-platform)
 
 This project is preconfigured to target Cloudflare Workers with a Global Durable Object binding.
 
