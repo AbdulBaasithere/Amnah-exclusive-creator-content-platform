@@ -7,15 +7,19 @@ import { Gem, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { TokenPurchaseModal } from "@/components/modals/TokenPurchaseModal";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-export function TokensStore() {
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [balance, setBalance] = useState(MOCK_USER_TOKENS.balance);
-  const handlePurchaseSuccess = (amount: number) => {
-    setBalance(prev => prev + amount);
-  };
-  return (
-    <AppLayout container>
+import { Badge } from "@/components/ui/badge";const MOCK_CREATOR = { _stub: true, init: (...args: unknown[]): void => {
+    console.warn('MOCK_CREATOR.init not implemented', args);
+  },
+
+  getValue: <T = unknown,>(key: string): T | undefined => {
+    console.warn('MOCK_CREATOR.getValue not implemented', key);
+    return undefined;
+  },
+
+  setValue: <T = unknown,>(key: string, value: T): void => {
+    console.warn('MOCK_CREATOR.setValue not implemented', key, value);
+  }
+} as const;export function TokensStore() {const [isModalOpen, setModalOpen] = useState(false);const [balance, setBalance] = useState(MOCK_USER_TOKENS.balance);const handlePurchaseSuccess = (amount: number) => {setBalance((prev) => prev + amount);};return <AppLayout container>
       <div className="space-y-8 md:space-y-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -52,8 +56,7 @@ export function TokensStore() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {MOCK_TOKEN_TRANSACTIONS.map(tx => (
-                  <TableRow key={tx.id}>
+                {MOCK_TOKEN_TRANSACTIONS.map((tx) => <TableRow key={tx.id}>
                     <TableCell>{format(tx.ts, "MMM d, yyyy")}</TableCell>
                     <TableCell>
                       <div className="font-medium">{tx.reason}</div>
@@ -64,14 +67,11 @@ export function TokensStore() {
                         {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
                       </Badge>
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
       </div>
       <TokenPurchaseModal isOpen={isModalOpen} onOpenChange={setModalOpen} onPurchaseSuccess={handlePurchaseSuccess} />
-    </AppLayout>
-  );
-}
+    </AppLayout>;}
