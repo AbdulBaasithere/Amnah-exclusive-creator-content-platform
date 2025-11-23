@@ -1,53 +1,12 @@
-// Phase 1: In-memory mock data for CraftLedger
-// --- TYPES ---
-// Note: In a real app, these would be in shared/types.ts
-export interface Creator {
-  id: string;
-  name: string;
-  bio: string;
-  avatar: string;
-  balance: number;
-}
-export interface ContentItem {
-  id: string;
-  creatorId: string;
-  title: string;
-  type: 'video' | 'download' | 'post';
-  tierId: string;
-  publishedAt: Date;
-  status: 'published' | 'draft' | 'scheduled';
-  attachments: { url: string; name: string }[];
-}
-export interface Tier {
-  id: string;
-  creatorId: string;
-  name: string;
-  price: number;
-  benefits: string[];
-}
-export interface User {
-  id: string;
-  name:string;
-  avatar: string;
-}
-export interface Subscription {
-  userId: string;
-  creatorId: string;
-  tierId: string;
-  active: boolean;
-}
-export interface UserTokens {
-  userId: string;
-  balance: number;
-}
-export interface TokenTransaction {
-  id: string;
-  userId: string;
-  creatorId?: string;
-  amount: number;
-  reason: string;
-  ts: Date;
-}
+import type {
+  Creator,
+  ContentItem,
+  Tier,
+  UserProfile,
+  Subscription,
+  UserTokens,
+  TokenTransaction,
+} from './types';
 // --- MOCK DATA ---
 export const MOCK_CREATOR: Creator = {
   id: 'c1',
@@ -68,7 +27,7 @@ export const MOCK_TIERS: Tier[] = [
   { id: 't2', creatorId: 'c1', name: 'Creator Pro', price: 29, benefits: ['All Explorer benefits', 'Exclusive video tutorials', 'Source code downloads'] },
   { id: 't3', creatorId: 'c1', name: 'VIP Access', price: 99, benefits: ['All Creator Pro benefits', 'Monthly 1-on-1 call', 'Early access to content'] },
 ];
-export const MOCK_USER: User = {
+export const MOCK_USER: UserProfile = {
   id: 'u1',
   name: 'Jane Subscriber',
   avatar: 'https://i.pravatar.cc/150?u=janesub',
@@ -93,10 +52,34 @@ export const MOCK_TOP_TIPPERS = [
     { user: { id: 'u3', name: 'Charlie Supporter', avatar: 'https://i.pravatar.cc/150?u=charlie' }, amount: 250 },
     { user: { id: 'u4', name: 'Diana Enthusiast', avatar: 'https://i.pravatar.cc/150?u=diana' }, amount: 100 },
 ];
+export const MOCK_ANALYTICS_DATA = {
+  earnings: [
+    { month: 'Jan', earnings: 1200 },
+    { month: 'Feb', earnings: 1800 },
+    { month: 'Mar', earnings: 1500 },
+    { month: 'Apr', earnings: 2200 },
+    { month: 'May', earnings: 2500 },
+    { month: 'Jun', earnings: 3100 },
+  ],
+  subscribers: [
+    { month: 'Jan', subscribers: 150 },
+    { month: 'Feb', subscribers: 210 },
+    { month: 'Mar', subscribers: 240 },
+    { month: 'Apr', subscribers: 300 },
+    { month: 'May', subscribers: 350 },
+    { month: 'Jun', subscribers: 420 },
+  ],
+  topContent: MOCK_CONTENT_ITEMS.slice(0, 3).map((item, i) => ({
+    ...item,
+    views: 1500 - i * 300,
+    earnings: (1500 - i * 300) * 0.5,
+  })),
+};
 // --- MOCK API FUNCTIONS ---
-export const addContentItem = (item: Omit<ContentItem, 'creatorId' | 'attachments'> & { attachments?: any[] }) => {
+export const addContentItem = (item: Omit<ContentItem, 'id' | 'creatorId' | 'attachments'> & { attachments?: any[] }) => {
   const newItem: ContentItem = {
     ...item,
+    id: `c${Date.now()}`,
     creatorId: MOCK_CREATOR.id,
     attachments: item.attachments || [],
   };
@@ -106,6 +89,8 @@ export const addContentItem = (item: Omit<ContentItem, 'creatorId' | 'attachment
 export const addTokenTransaction = (tx: Omit<TokenTransaction, 'id'>) => {
     const newTx: TokenTransaction = { ...tx, id: `tx${Date.now()}` };
     MOCK_TOKEN_TRANSACTIONS.unshift(newTx);
-    MOCK_USER_TOKENS.balance += tx.amount;
+    if (tx.amount > 0) {
+      MOCK_USER_TOKENS.balance += tx.amount;
+    }
     return Promise.resolve(newTx);
 }

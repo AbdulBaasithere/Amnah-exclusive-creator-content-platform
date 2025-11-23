@@ -1,14 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { MOCK_TIERS, addContentItem } from "shared/mock-data";
+import { MOCK_TIERS, addContentItem } from "@shared/mock-data";
 import { Toaster, toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -38,13 +37,14 @@ export function CreatorEditor({ onSave }: CreatorEditorProps) {
   });
   const onSubmit = (data: ContentFormData) => {
     console.log("Submitting:", data);
+    const status = data.publishDate && data.publishDate > new Date() ? 'scheduled' : 'published';
     addContentItem({
-      ...data,
-      id: `c${Date.now()}`,
-      creatorId: 'c1',
-      status: data.publishDate && data.publishDate > new Date() ? 'scheduled' : 'published',
+      title: data.title,
+      description: data.description,
+      type: data.type,
+      tierId: data.tierId,
       publishedAt: data.publishDate || new Date(),
-      attachments: [],
+      status: status,
     });
     toast.success("Content saved successfully!");
     form.reset();

@@ -1,7 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MOCK_CREATOR, MOCK_CONTENT_ITEMS, MOCK_TIERS, MOCK_USER, MOCK_SUBSCRIPTION } from "shared/mock-data";
+import { MOCK_CREATOR, MOCK_CONTENT_ITEMS, MOCK_TIERS, MOCK_SUBSCRIPTION } from "@shared/mock-data";
 import { ContentCard } from "@/components/content/ContentCard";
 import { SubscriptionTierCard } from "@/components/content/SubscriptionTierCard";
 import { Gem, Lock } from "lucide-react";

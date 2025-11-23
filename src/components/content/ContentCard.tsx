@@ -5,16 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreVertical, Edit, Trash2, Clock, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
-export interface ContentItem {
-  id: string;
-  creatorId: string;
-  title: string;
-  type: 'video' | 'download' | 'post';
-  tierId: string;
-  publishedAt: Date;
-  status: 'published' | 'draft' | 'scheduled';
-  attachments: { url: string; name: string }[];
-}
+import type { ContentItem } from "@shared/types";
 interface ContentCardProps {
   content: ContentItem;
   isCreatorView?: boolean;
@@ -59,7 +50,7 @@ export function ContentCard({ content, isCreatorView = false }: ContentCardProps
           {content.status === 'scheduled' ? <Clock className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           <span>{format(content.publishedAt, "MMM d, yyyy")}</span>
         </div>
-        {isCreatorView && <Badge className={statusColors[content.status]}>{content.status}</Badge>}
+        {isCreatorView && <Badge className={`${statusColors[content.status]} capitalize`}>{content.status}</Badge>}
       </CardFooter>
     </Card>
   );

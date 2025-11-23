@@ -1,13 +1,9 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MOCK_CREATOR } from "@shared/mock-data";
-import { DollarSign, Users, AlertTriangle } from "lucide-react";
+import { MOCK_ANALYTICS_DATA, MOCK_CREATOR } from "@shared/mock-data";
+import { DollarSign, Users, BarChart2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api-client";
-import type { AnalyticsData } from "@shared/types";
-import { Skeleton } from "@/components/ui/skeleton";
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -30,27 +26,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 export function CreatorAnalytics() {
-  const { data, isLoading, error } = useQuery<AnalyticsData>({
-    queryKey: ['analytics'],
-    queryFn: () => api('/api/analytics'),
-  });
-  if (isLoading) {
-    return <AnalyticsSkeleton />;
-  }
-  if (error) {
-    return (
-      <AppLayout container>
-        <div className="flex flex-col items-center justify-center h-96 bg-red-50 dark:bg-red-900/20 rounded-lg">
-          <AlertTriangle className="w-12 h-12 text-red-500" />
-          <h2 className="mt-4 text-xl font-semibold">Failed to load analytics</h2>
-          <p className="text-muted-foreground">{error.message}</p>
-        </div>
-      </AppLayout>
-    );
-  }
-  const { earnings, subscribers, topContent } = data!;
-  const totalEarnings = earnings.reduce((sum, item) => sum + item.earnings, 0);
-  const totalSubscribers = subscribers[subscribers.length - 1].subscribers;
+  const totalEarnings = MOCK_ANALYTICS_DATA.earnings.reduce((sum, item) => sum + item.earnings, 0);
+  const totalSubscribers = MOCK_ANALYTICS_DATA.subscribers[MOCK_ANALYTICS_DATA.subscribers.length - 1].subscribers;
   return (
     <AppLayout container>
       <div className="space-y-8 md:space-y-12">
@@ -100,7 +77,7 @@ export function CreatorAnalytics() {
           </CardHeader>
           <CardContent className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={earnings.map((e, i) => ({ ...e, subscribers: subscribers[i].subscribers }))}>
+              <AreaChart data={MOCK_ANALYTICS_DATA.earnings.map((e, i) => ({ ...e, subscribers: MOCK_ANALYTICS_DATA.subscribers[i].subscribers }))}>
                 <defs>
                   <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
@@ -139,7 +116,7 @@ export function CreatorAnalytics() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topContent.map(item => (
+                {MOCK_ANALYTICS_DATA.topContent.map(item => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.title}</TableCell>
                     <TableCell className="text-right">{item.views.toLocaleString()}</TableCell>
@@ -148,43 +125,6 @@ export function CreatorAnalytics() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </div>
-    </AppLayout>
-  );
-}
-function AnalyticsSkeleton() {
-  return (
-    <AppLayout container>
-      <div className="space-y-8 md:space-y-12">
-        <div>
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-4 w-64 mt-2" />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card><CardHeader><Skeleton className="h-4 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-32" /><Skeleton className="h-3 w-24 mt-1" /></CardContent></Card>
-          <Card><CardHeader><Skeleton className="h-4 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-32" /><Skeleton className="h-3 w-24 mt-1" /></CardContent></Card>
-          <Card><CardHeader><Skeleton className="h-4 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-32" /><Skeleton className="h-3 w-24 mt-1" /></CardContent></Card>
-        </div>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-64" />
-            <Skeleton className="h-4 w-80 mt-2" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-96 w-full" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-56" />
-            <Skeleton className="h-4 w-72 mt-2" />
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
       </div>

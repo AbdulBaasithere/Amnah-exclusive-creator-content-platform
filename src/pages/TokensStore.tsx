@@ -2,7 +2,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MOCK_USER_TOKENS, MOCK_TOKEN_TRANSACTIONS } from "shared/mock-data";
+import { MOCK_USER_TOKENS, MOCK_TOKEN_TRANSACTIONS } from "@shared/mock-data";
 import { Gem, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { TokenPurchaseModal } from "@/components/modals/TokenPurchaseModal";
@@ -57,10 +57,10 @@ export function TokensStore() {
                     <TableCell>{format(tx.ts, "MMM d, yyyy")}</TableCell>
                     <TableCell>
                       <div className="font-medium">{tx.reason}</div>
-                      {tx.creatorId && <div className="text-sm text-muted-foreground">To: {tx.creatorId}</div>}
+                      {tx.creatorId && <div className="text-sm text-muted-foreground">To: {MOCK_CREATOR.name}</div>}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge variant={tx.amount > 0 ? "default" : "destructive"} className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                      <Badge variant={tx.amount > 0 ? "default" : "destructive"} className={tx.amount > 0 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}>
                         {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
                       </Badge>
                     </TableCell>

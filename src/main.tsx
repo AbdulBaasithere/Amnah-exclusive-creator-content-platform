@@ -16,6 +16,7 @@ import { CreatorEditor } from '@/pages/CreatorEditor';
 import { SubscriberView } from '@/pages/SubscriberView';
 import { TokensStore } from '@/pages/TokensStore';
 import { DemoPage } from '@/pages/DemoPage';
+import { CreatorAnalytics } from '@/pages/CreatorAnalytics';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -45,6 +46,11 @@ const router = createBrowserRouter([
   {
     path: "/tokens",
     element: <TokensStore />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/analytics",
+    element: <CreatorAnalytics />,
     errorElement: <RouteErrorBoundary />,
   },
   {

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Gem, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Toaster, toast } from "sonner";
-import { addTokenTransaction } from "shared/mock-data";
+import { addTokenTransaction } from "@shared/mock-data";
 interface TokenPurchaseModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -23,7 +23,6 @@ export function TokenPurchaseModal({ isOpen, onOpenChange, onPurchaseSuccess }: 
     setIsLoading(true);
     setTimeout(() => {
       addTokenTransaction({
-        id: `tx${Date.now()}`,
         userId: 'u1',
         amount: selectedPackage.amount,
         reason: 'Token Purchase',

@@ -8,7 +8,7 @@ import { Toaster, toast } from '@/components/ui/sonner'
 import type { User, Chat, ChatMessage } from '@shared/types'
 import { api } from '@/lib/api-client'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { MOCK_USER_TOKENS } from 'shared/mock-data'
+import { MOCK_USER_TOKENS } from '@shared/mock-data'
 import { TokenPurchaseModal } from '@/components/modals/TokenPurchaseModal'
 export function DemoPage() {
   const [users, updateUsers] = useState<User[]>([])

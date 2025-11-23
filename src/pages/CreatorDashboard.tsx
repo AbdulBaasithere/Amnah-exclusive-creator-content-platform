@@ -1,15 +1,16 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, PlusCircle, Users, FileText } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { DollarSign, PlusCircle, Users, FileText, ArrowRight } from "lucide-react";
 import { ContentCard } from "@/components/content/ContentCard";
 import { SubscriptionTierCard } from "@/components/content/SubscriptionTierCard";
 import { PayoutRequestModal } from "@/components/modals/PayoutRequestModal";
-import { MOCK_CREATOR, MOCK_CONTENT_ITEMS, MOCK_TIERS, MOCK_TOP_TIPPERS } from "shared/mock-data";
+import { MOCK_CREATOR, MOCK_CONTENT_ITEMS, MOCK_TIERS, MOCK_TOP_TIPPERS, MOCK_ANALYTICS_DATA } from "@shared/mock-data";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CreatorEditor } from "./CreatorEditor";
 import { Link } from "react-router-dom";
+import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 export function CreatorDashboard() {
   const [isPayoutModalOpen, setPayoutModalOpen] = useState(false);
   const [isEditorSheetOpen, setEditorSheetOpen] = useState(false);
@@ -41,7 +42,7 @@ export function CreatorDashboard() {
           </div>
         </div>
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -72,6 +73,38 @@ export function CreatorDashboard() {
               <p className="text-xs text-muted-foreground">+5 since last month</p>
             </CardContent>
           </Card>
+          <Card className="flex flex-col">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Earnings Preview</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">Last 6 months</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col justify-end p-0">
+              <ResponsiveContainer width="100%" height={60}>
+                <AreaChart data={MOCK_ANALYTICS_DATA.earnings} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                   <defs>
+                    <linearGradient id="colorEarningsPreview" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Tooltip
+                    contentStyle={{
+                      background: "hsl(var(--background))",
+                      borderColor: "hsl(var(--border))",
+                      fontSize: "12px",
+                      padding: "4px 8px",
+                    }}
+                    labelFormatter={() => ''}
+                    formatter={(value: number) => [`$${value}`, 'Earnings']}
+                  />
+                  <Area type="monotone" dataKey="earnings" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#colorEarningsPreview)" />
+                </AreaChart>
+              </ResponsiveContainer>
+              <Link to="/analytics" className="text-xs font-semibold text-primary text-center py-2 hover:underline">
+                View Analytics <ArrowRight className="inline h-3 w-3" />
+              </Link>
+            </CardContent>
+          </Card>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Content Library */}
@@ -85,7 +118,6 @@ export function CreatorDashboard() {
           </div>
           {/* Tiers & Tippers */}
           <div className="space-y-8">
-            {/* Subscription Tiers */}
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold">Subscription Tiers</h2>
               <div className="space-y-4">
@@ -94,7 +126,6 @@ export function CreatorDashboard() {
                 ))}
               </div>
             </div>
-            {/* Top Tippers */}
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold">Top Tippers</h2>
               <Card>

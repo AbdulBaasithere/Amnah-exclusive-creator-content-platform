@@ -1,5 +1,5 @@
-import { ApiResponse } from "../../shared/types"
-import * as mock from "shared/mock-data";
+import { ApiResponse } from "@shared/types"
+import * as mock from "@shared/mock-data";
 const MOCK_DELAY = 500;
 // Phase 1: Mock API client that falls back to mock data
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
