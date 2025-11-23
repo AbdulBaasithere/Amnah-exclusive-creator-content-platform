@@ -77,7 +77,10 @@ function updateWranglerJsonc() {
 }
 
 function runSetupCommands() {
-    const commands = [];
+    const commands = [
+    "bun add tailwindcss@^3.4.7",
+    "bun add react-intersection-observer@^9.4.0"
+];
     
     if (commands.length === 0) {
         console.log('⊘ No setup commands to run');
