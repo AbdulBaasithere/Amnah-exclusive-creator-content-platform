@@ -15,17 +15,17 @@ interface TipModalProps {
   creatorId: string;
   creatorName: string;
 }
-const tipSchemaBase = (maxBalance: number) => z.object({
+const tipSchemaBase = (maxBalance: number): z.ZodSchema<{ amount: number }> => z.object({
   amount: z.coerce.number().positive("Amount must be positive").max(maxBalance, "Insufficient balance"),
 });
-type TipFormData = z.infer<ReturnType<typeof tipSchemaBase>>;
+type TipFormData = { amount: number };
 export function TipModal({ isOpen, onOpenChange, creatorId, creatorName }: TipModalProps) {
   const { data: tokenData } = useQuery<{ balance: number }>({
     queryKey: ['tokens'],
     queryFn: () => api('/api/tokens'),
     enabled: isOpen,
   });
-  const tipSchema = tipSchemaBase(tokenData?.balance ?? 0);
+  const tipSchema: z.ZodSchema<TipFormData> = tipSchemaBase(tokenData?.balance ?? 0);
   const form = useForm<TipFormData>({
     resolver: zodResolver(tipSchema),
     defaultValues: { amount: 100 },
